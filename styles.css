@@ -18,13 +18,17 @@
 .rv-issue-link { padding: 0; border: 0; background: none; box-shadow: none; color: var(--text-accent); text-align: left; overflow-wrap: anywhere; }
 .rv-issue-link:hover { background: none; box-shadow: none; text-decoration: underline; }
 .rv-root-list { margin: 8px 0 10px; min-height: 0; }
-.rv-root-actions { display: flex; align-items: center; gap: 6px; }
+.rv-root-actions, .rv-word-actions { display: flex; align-items: center; gap: 6px; }
 .rv-root-sort { width: auto; max-width: 88px; padding: 2px 22px 2px 7px; font-size: var(--font-ui-smaller); }
+.rv-word-sort { width: auto; max-width: 88px; padding: 2px 22px 2px 7px; font-size: var(--font-ui-smaller); }
 .rv-root-group { margin-bottom: 8px; }
-.rv-root-group-label { position: sticky; top: 0; z-index: 1; padding: 3px 4px; border-bottom: 1px solid var(--background-modifier-border); background: var(--background-primary); color: var(--text-accent); font-size: var(--font-ui-smaller); font-weight: var(--font-semibold); }
+.rv-root-group-label, .rv-word-group-label { display: block; width: 100%; position: sticky; top: 0; z-index: 1; padding: 3px 4px; border: 0; border-bottom: 1px solid var(--background-modifier-border); border-radius: 0; background: var(--background-primary); box-shadow: none; color: var(--text-accent); font-size: var(--font-ui-smaller); font-weight: var(--font-semibold); text-align: left; cursor: pointer; }
+.rv-root-group-label:hover, .rv-word-group-label:hover { background: var(--background-secondary); color: var(--text-normal); box-shadow: none; }
 .rv-root-group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); column-gap: 10px; }
 .rv-word-section { border-top: 1px solid var(--background-modifier-border); }
 .rv-word-header { min-height: 38px; }
+.rv-word-group { margin-bottom: 8px; }
+.rv-word-group-body { min-height: 0; }
 .rv-root-row, .rv-word-row { border-bottom: 1px solid var(--background-modifier-border); min-height: 42px; }
 .rv-word-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: start; }
 .rv-root-row.is-active { background: var(--background-secondary); }

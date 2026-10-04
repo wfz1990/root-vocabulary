@@ -20,8 +20,13 @@ export class VocabularyView extends ItemView {
   private favorites = false;
   private viewMode: 'roots' | 'words' = 'roots';
   private rootSort: 'form-asc' | 'form-desc' | 'meaning' = 'form-asc';
+  private wordSort: 'spelling-asc' | 'spelling-desc' = 'spelling-asc';
   private rootsCollapsed = false;
   private wordsCollapsed = false;
+  private expandedRootGroups = new Set<string>();
+  private expandedWordGroups = new Set<string>();
+  private collapsedRootGroups = new Set<string>();
+  private collapsedWordGroups = new Set<string>();
   private results!: HTMLElement;
   private searchInput!: HTMLInputElement;
   private statusSelect!: HTMLSelectElement;
@@ -82,6 +87,24 @@ export class VocabularyView extends ItemView {
     this.renderResults();
   }
 
+  private toggleRootGroup(group: string): void {
+    if (this.rootsCollapsed) {
+      if (this.expandedRootGroups.has(group)) this.expandedRootGroups.delete(group);
+      else this.expandedRootGroups.add(group);
+    } else if (this.collapsedRootGroups.has(group)) this.collapsedRootGroups.delete(group);
+    else this.collapsedRootGroups.add(group);
+    this.renderResults();
+  }
+
+  private toggleWordGroup(group: string): void {
+    if (this.wordsCollapsed) {
+      if (this.expandedWordGroups.has(group)) this.expandedWordGroups.delete(group);
+      else this.expandedWordGroups.add(group);
+    } else if (this.collapsedWordGroups.has(group)) this.collapsedWordGroups.delete(group);
+    else this.collapsedWordGroups.add(group);
+    this.renderResults();
+  }
+
   private renderResults(): void {
     if (!this.results) return;
     this.results.empty();
@@ -110,17 +133,16 @@ export class VocabularyView extends ItemView {
       this.rootSort = sort.value as typeof this.rootSort;
       this.renderResults();
     });
-    const all = rootActions.createEl('button', { text: '全部单词', cls: this.rootId ? 'rv-text-button' : 'rv-text-button is-active' });
-    all.addEventListener('click', () => this.showScope(''));
     const rootCollapse = iconButton(rootActions, this.rootsCollapsed ? 'chevron-down' : 'chevron-up',
       this.rootsCollapsed ? '展开所有词根' : '折叠所有词根', () => {
         this.rootsCollapsed = !this.rootsCollapsed;
+        this.expandedRootGroups.clear();
+        this.collapsedRootGroups.clear();
         this.renderResults();
       });
     rootCollapse.setAttribute('aria-expanded', String(!this.rootsCollapsed));
     const rootList = this.results.createDiv({ cls: 'rv-root-list' });
     rootElements.push(rootList);
-    rootList.toggleClass('rv-hidden', this.rootsCollapsed);
     const needle = this.query.trim().toLocaleLowerCase();
     const filteredRoots = roots.filter(r => !needle || `${r.form} ${r.meaning} ${r.variants.join(' ')}`.toLocaleLowerCase().includes(needle)
       || words.some(w => w.rootIds.includes(r.id) && `${w.spelling} ${w.meaning}`.toLocaleLowerCase().includes(needle)));
@@ -134,8 +156,14 @@ export class VocabularyView extends ItemView {
       if (group !== currentGroup) {
         currentGroup = group;
         const section = rootList.createDiv({ cls: 'rv-root-group' });
-        section.createDiv({ text: group, cls: 'rv-root-group-label' });
+        const label = section.createEl('button', { text: group, cls: 'rv-root-group-label', attr: {
+          'aria-label': `${group} 词根分组`, 'aria-expanded': String(this.rootsCollapsed
+            ? this.expandedRootGroups.has(group) : !this.collapsedRootGroups.has(group))
+        } });
+        label.addEventListener('click', () => this.toggleRootGroup(group));
         groupBody = section.createDiv({ cls: 'rv-root-group-grid' });
+        const rootGroupOpen = this.rootsCollapsed ? this.expandedRootGroups.has(group) : !this.collapsedRootGroups.has(group);
+        groupBody.toggleClass('rv-hidden', !rootGroupOpen);
       }
       const count = words.filter(w => w.rootIds.includes(root.id));
       const row = groupBody!.createDiv({ cls: `rv-root-row${this.rootId === root.id ? ' is-active' : ''}` });
@@ -166,16 +194,45 @@ export class VocabularyView extends ItemView {
     wordSection.toggleClass('rv-pane-hidden', this.viewMode !== 'words');
     const wordHeader = wordSection.createDiv({ cls: 'rv-section-heading rv-word-header' });
     wordHeader.createEl('h4', { text: `${selected ? `${selected.form} · ` : ''}单词 ${matched.length}`, cls: 'rv-word-heading' });
+    const wordActions = wordHeader.createDiv({ cls: 'rv-word-actions' });
+    const all = wordActions.createEl('button', { text: '全部单词', cls: this.rootId ? 'rv-text-button' : 'rv-text-button is-active' });
+    all.addEventListener('click', () => { this.viewMode = 'words'; this.showScope(''); });
+    const wordSort = wordActions.createEl('select', { cls: 'rv-word-sort', attr: { 'aria-label': '单词排序', title: '单词排序' } });
+    wordSort.createEl('option', { text: 'A-Z', value: 'spelling-asc' });
+    wordSort.createEl('option', { text: 'Z-A', value: 'spelling-desc' });
+    wordSort.value = this.wordSort;
+    wordSort.addEventListener('change', () => {
+      this.wordSort = wordSort.value as typeof this.wordSort;
+      this.renderResults();
+    });
     const wordCollapse = iconButton(wordHeader, this.wordsCollapsed ? 'chevron-down' : 'chevron-up',
       this.wordsCollapsed ? '展开所有单词' : '折叠所有单词', () => {
         this.wordsCollapsed = !this.wordsCollapsed;
+        this.expandedWordGroups.clear();
+        this.collapsedWordGroups.clear();
         this.renderResults();
       });
     wordCollapse.setAttribute('aria-expanded', String(!this.wordsCollapsed));
     const wordList = wordSection.createDiv({ cls: 'rv-word-list' });
-    wordList.toggleClass('rv-hidden', this.wordsCollapsed);
-    for (const word of matched) {
-      const row = wordList.createDiv({ cls: 'rv-word-row' });
+    const sortedWords = [...matched].sort((a, b) => (this.wordSort === 'spelling-desc' ? -1 : 1)
+      * a.spelling.localeCompare(b.spelling, 'en', { sensitivity: 'base' }));
+    let currentWordGroup = '';
+    let wordGroupBody: HTMLElement | null = null;
+    for (const word of sortedWords) {
+      const wordGroup = /^[a-z]/i.test(word.spelling) ? word.spelling[0].toUpperCase() : '#';
+      if (wordGroup !== currentWordGroup) {
+        currentWordGroup = wordGroup;
+        const section = wordList.createDiv({ cls: 'rv-word-group' });
+        const label = section.createEl('button', { text: wordGroup, cls: 'rv-word-group-label', attr: {
+          'aria-label': `${wordGroup} 单词分组`, 'aria-expanded': String(this.wordsCollapsed
+            ? this.expandedWordGroups.has(wordGroup) : !this.collapsedWordGroups.has(wordGroup))
+        } });
+        label.addEventListener('click', () => this.toggleWordGroup(wordGroup));
+        wordGroupBody = section.createDiv({ cls: 'rv-word-group-body' });
+        const wordGroupOpen = this.wordsCollapsed ? this.expandedWordGroups.has(wordGroup) : !this.collapsedWordGroups.has(wordGroup);
+        wordGroupBody.toggleClass('rv-hidden', !wordGroupOpen);
+      }
+      const row = wordGroupBody!.createDiv({ cls: 'rv-word-row' });
       const main = row.createEl('button', { cls: 'rv-word-main' });
       main.createEl('strong', { text: word.spelling });
       if (word.ipa) main.createEl('span', { text: word.ipa, cls: 'rv-muted' });
