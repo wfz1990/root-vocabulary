@@ -1,4 +1,4 @@
-import { App, ItemView, Modal, Notice, Setting, WorkspaceLeaf, setIcon } from 'obsidian';
+import { App, ItemView, Modal, Notice, Setting, WorkspaceLeaf, requestUrl, setIcon } from 'obsidian';
 import { Familiarity, RootEntry, WordEntry, resetWordFilter, visibleWords } from './model';
 import { ChineseMeaningCandidate } from './dictionary';
 import { VocabularyStore } from './store';
@@ -31,6 +31,10 @@ export class VocabularyView extends ItemView {
   private expandedWordGroups = new Set<string>();
   private collapsedRootGroups = new Set<string>();
   private collapsedWordGroups = new Set<string>();
+  private pronunciationCache = new Map<string, string | null>();
+  private pronunciationRequests = new Map<string, Promise<string | null>>();
+  private activeAudio?: HTMLAudioElement;
+  private pronunciationSequence = 0;
   private results!: HTMLElement;
   private searchInput!: HTMLInputElement;
   private statusSelect!: HTMLSelectElement;
@@ -78,10 +82,95 @@ export class VocabularyView extends ItemView {
 
   async onClose(): Promise<void> {
     this.unsubscribe?.();
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    this.pronunciationSequence++;
+    this.stopPronunciation();
   }
 
-  private speakWord(spelling: string): void {
+  private stopPronunciation(): void {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    this.activeAudio?.pause();
+    this.activeAudio = undefined;
+  }
+
+  private findYoudaoAudio(spelling: string): string | null {
+    const query = spelling.trim();
+    return query ? `https://dict.youdao.com/dictvoice?type=1&audio=${encodeURIComponent(query)}` : null;
+  }
+
+  private async findFreeDictionaryAudio(spelling: string): Promise<string | null> {
+    const query = spelling.trim().toLocaleLowerCase();
+    if (!query) return null;
+    if (this.pronunciationCache.has(query)) return this.pronunciationCache.get(query) ?? null;
+    const existing = this.pronunciationRequests.get(query);
+    if (existing) return existing;
+    const request = (async () => {
+      try {
+        const response = await requestUrl({
+          url: `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(query)}`,
+          method: 'GET',
+        });
+        const data = JSON.parse(response.text) as unknown;
+        if (!Array.isArray(data)) return null;
+        for (const entry of data as Array<Record<string, unknown>>) {
+          const phonetics = entry.phonetics;
+          if (!Array.isArray(phonetics)) continue;
+          for (const phonetic of phonetics as Array<Record<string, unknown>>) {
+            const audio = typeof phonetic.audio === 'string' ? phonetic.audio.trim() : '';
+            if (audio) return audio.startsWith('//') ? `https:${audio}` : audio;
+          }
+        }
+      } catch {
+        // Online pronunciation is optional; the caller falls back to system speech.
+      }
+      return null;
+    })();
+    this.pronunciationRequests.set(query, request);
+    const audio = await request;
+    this.pronunciationRequests.delete(query);
+    this.pronunciationCache.set(query, audio);
+    return audio;
+  }
+
+  private async playRemoteAudio(url: string): Promise<boolean> {
+    const audio = new Audio();
+    audio.preload = 'auto';
+    this.activeAudio = audio;
+    const loaded = await new Promise<boolean>(resolve => {
+      let settled = false;
+      const finish = (success: boolean) => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timeout);
+        audio.removeEventListener('canplaythrough', onReady);
+        audio.removeEventListener('error', onError);
+        resolve(success);
+      };
+      const onReady = () => finish(true);
+      const onError = () => finish(false);
+      const timeout = window.setTimeout(() => finish(false), 5000);
+      audio.addEventListener('canplaythrough', onReady, { once: true });
+      audio.addEventListener('error', onError, { once: true });
+      audio.src = url;
+      audio.load();
+    });
+    if (!loaded || this.activeAudio !== audio) {
+      audio.pause();
+      if (this.activeAudio === audio) this.activeAudio = undefined;
+      return false;
+    }
+    try {
+      await audio.play();
+      audio.addEventListener('ended', () => {
+        if (this.activeAudio === audio) this.activeAudio = undefined;
+      }, { once: true });
+      return true;
+    } catch {
+      if (this.activeAudio === audio) this.activeAudio = undefined;
+      return false;
+    }
+  }
+
+  private speakSystemWord(spelling: string): void {
     if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
       new Notice('当前环境不支持单词发音');
       return;
@@ -92,6 +181,18 @@ export class VocabularyView extends ItemView {
     utterance.rate = 0.85;
     utterance.pitch = 1;
     window.speechSynthesis.speak(utterance);
+  }
+
+  private async playWord(spelling: string): Promise<void> {
+    const sequence = ++this.pronunciationSequence;
+    this.stopPronunciation();
+    const youdaoAudio = this.findYoudaoAudio(spelling);
+    if (youdaoAudio && await this.playRemoteAudio(youdaoAudio)) return;
+    if (sequence !== this.pronunciationSequence) return;
+    const freeDictionaryAudio = await this.findFreeDictionaryAudio(spelling);
+    if (sequence !== this.pronunciationSequence) return;
+    if (freeDictionaryAudio && await this.playRemoteAudio(freeDictionaryAudio)) return;
+    if (sequence === this.pronunciationSequence) this.speakSystemWord(spelling);
   }
 
   private showScope(rootId: string): void {
@@ -270,7 +371,7 @@ export class VocabularyView extends ItemView {
         void this.store.updateWordState(word, { familiarity: state.value as Familiarity })
           .catch(error => { state.value = word.familiarity; new Notice((error as Error).message); });
       });
-      iconButton(controls, 'volume-2', `播放${word.spelling}发音`, () => this.speakWord(word.spelling));
+      iconButton(controls, 'volume-2', `播放${word.spelling}发音`, () => { void this.playWord(word.spelling); });
       const star = iconButton(controls, 'star', word.favorite ? '取消收藏' : '收藏单词', () => {
         void this.store.updateWordState(word, { favorite: !word.favorite })
           .catch(error => new Notice((error as Error).message));
