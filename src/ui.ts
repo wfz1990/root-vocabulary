@@ -76,7 +76,23 @@ export class VocabularyView extends ItemView {
     this.renderResults();
   }
 
-  async onClose(): Promise<void> { this.unsubscribe?.(); }
+  async onClose(): Promise<void> {
+    this.unsubscribe?.();
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  }
+
+  private speakWord(spelling: string): void {
+    if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
+      new Notice('当前环境不支持单词发音');
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(spelling);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.85;
+    utterance.pitch = 1;
+    window.speechSynthesis.speak(utterance);
+  }
 
   private showScope(rootId: string): void {
     const filter = resetWordFilter(rootId);
@@ -254,6 +270,7 @@ export class VocabularyView extends ItemView {
         void this.store.updateWordState(word, { familiarity: state.value as Familiarity })
           .catch(error => { state.value = word.familiarity; new Notice((error as Error).message); });
       });
+      iconButton(controls, 'volume-2', `播放${word.spelling}发音`, () => this.speakWord(word.spelling));
       const star = iconButton(controls, 'star', word.favorite ? '取消收藏' : '收藏单词', () => {
         void this.store.updateWordState(word, { favorite: !word.favorite })
           .catch(error => new Notice((error as Error).message));
