@@ -1,0 +1,9 @@
+{
+  "id": "root-vocabulary",
+  "name": "词根词库",
+  "version": "0.3.2",
+  "minAppVersion": "1.13.0",
+  "description": "记录词根与单词，并在侧栏查阅、搜索和标记熟悉度。",
+  "author": "Root Vocabulary",
+  "isDesktopOnly": true
+}
