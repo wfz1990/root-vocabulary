@@ -6,7 +6,7 @@ const root: RootEntry = { kind: 'root', id: 'root-1', path: '词根词库/词根
   meaning: '看', variants: ['spec'], origin: '', explanation: '' };
 const otherRoot: RootEntry = { ...root, id: 'root-2', path: '词根词库/词根/re.md', form: 're', meaning: '再次', variants: [] };
 const word: WordEntry = { kind: 'word', id: 'word-1', path: '词根词库/单词/respect.md', spelling: 'respect',
-  meaning: '尊重', rootIds: ['root-1', 'root-2'], ipa: '/rɪˈspekt/', phonics: 're-spect', partOfSpeech: 'verb',
+  meaning: '尊重', rootIds: ['root-1', 'root-2'], ipa: '/rɪˈspekt/',
   example: 'Respect others.', favorite: true, familiarity: '学习中', dictionarySource: '', dictionaryLicense: '' };
 const source = (entry: RootEntry | WordEntry) => ({ path: entry.path, text: writeNote(null, entry) });
 
@@ -16,9 +16,11 @@ test('round trips root and multi-root word through Markdown frontmatter', () => 
 });
 
 test('editing preserves body, unknown fields and comments', () => {
-  const original = source(word).text.replace('spelling: respect', 'extra: custom # retained\nspelling: respect') + '## Personal notes\nDo not erase me.\n';
+  const original = source(word).text.replace('spelling: respect', 'extra: custom # retained\nphonics: re-spect\npartOfSpeech: verb\nspelling: respect') + '## Personal notes\nDo not erase me.\n';
   const updated = writeNote(original, { ...word, meaning: '敬重', familiarity: '已掌握' });
   assert.match(updated, /extra: custom # retained/);
+  assert.match(updated, /phonics: re-spect/);
+  assert.match(updated, /partOfSpeech: verb/);
   assert.match(updated, /## Personal notes\nDo not erase me/);
   assert.equal(parseNote(word.path, updated).meaning, '敬重');
 });

@@ -11,7 +11,7 @@ export interface RootEntry {
 }
 export interface WordEntry {
   kind: 'word'; id: string; path: string; spelling: string; meaning: string;
-  rootIds: string[]; ipa: string; phonics: string; partOfSpeech: string;
+  rootIds: string[]; ipa: string;
   example: string; favorite: boolean; familiarity: Familiarity; dictionarySource: string; dictionaryLicense: string;
 }
 export type Entry = RootEntry | WordEntry;
@@ -61,7 +61,7 @@ export function parseNote(path: string, text: string): Entry {
   const familiarity = fields.familiarity ?? '未学';
   if (!['未学', '学习中', '已掌握'].includes(String(familiarity))) throw new Error('familiarity 无效');
   return { kind, id, path, spelling: required(fields, 'spelling'), meaning: required(fields, 'meaning'), rootIds,
-    ipa: optional(fields, 'ipa'), phonics: optional(fields, 'phonics'), partOfSpeech: optional(fields, 'partOfSpeech'),
+    ipa: optional(fields, 'ipa'),
     example: optional(fields, 'example'), favorite: fields.favorite ?? false, familiarity: familiarity as Familiarity,
     dictionarySource: optional(fields, 'dictionarySource'), dictionaryLicense: optional(fields, 'dictionaryLicense') };
 }
@@ -111,7 +111,7 @@ export function writeNote(original: string | null, entry: Entry): string {
     ? { type: 'root', id: entry.id, form: entry.form, meaning: entry.meaning, variants: entry.variants,
         origin: entry.origin, explanation: entry.explanation }
     : { type: 'word', id: entry.id, spelling: entry.spelling, meaning: entry.meaning, rootIds: entry.rootIds,
-        ipa: entry.ipa, phonics: entry.phonics, partOfSpeech: entry.partOfSpeech, example: entry.example,
+        ipa: entry.ipa, example: entry.example,
         favorite: entry.favorite, familiarity: entry.familiarity, dictionarySource: entry.dictionarySource,
         dictionaryLicense: entry.dictionaryLicense };
   for (const [key, value] of Object.entries(fields)) doc.set(key, value);

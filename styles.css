@@ -54,8 +54,8 @@
 .rv-text-button.is-active { color: var(--interactive-accent); }
 .rv-modal .modal-content { max-height: 72vh; overflow-y: auto; }
 .rv-modal .setting-item { align-items: flex-start; }
-.rv-modal .setting-item-control input[type=text], .rv-modal .setting-item-control textarea { width: min(290px, 45vw); }
-.rv-modal .setting-item-control textarea { min-height: 70px; }
+.rv-modal .setting-item-control input[type=text], .rv-modal .setting-item-control textarea { width: min(250px, 55vw); }
+.rv-modal .setting-item-control textarea { min-height: 48px !important; height: 48px !important; max-height: 48px !important; resize: none; overflow-y: auto; }
 .rv-root-choices { max-height: 180px; overflow: auto; border: 1px solid var(--background-modifier-border); padding: 8px; margin: 12px 0; }
 .rv-root-choices .setting-item { padding: 5px 0; }
 .rv-root-search { width: 100%; margin: 8px 0 3px; }

@@ -400,8 +400,8 @@ export class EntryModal extends Modal {
     super(app);
     this.draft = entry ? structuredClone(entry) : kind === 'root'
       ? { kind: 'root', id: crypto.randomUUID(), path: '', form: '', meaning: '', variants: [], origin: '', explanation: '' }
-      : { kind: 'word', id: crypto.randomUUID(), path: '', spelling: '', meaning: '', rootIds: [], ipa: '', phonics: '',
-          partOfSpeech: '', example: '', favorite: false, familiarity: '未学', dictionarySource: '', dictionaryLicense: '' };
+      : { kind: 'word', id: crypto.randomUUID(), path: '', spelling: '', meaning: '', rootIds: [], ipa: '',
+          example: '', favorite: false, familiarity: '未学', dictionarySource: '', dictionaryLicense: '' };
   }
 
   async onOpen(): Promise<void> {
