@@ -1,6 +1,6 @@
 {
   "name": "obsidian-root-vocabulary",
-  "version": "0.4.2",
+  "version": "0.4.6",
   "private": true,
   "type": "module",
   "engines": { "node": ">=24" },

@@ -30,11 +30,13 @@
 .rv-word-group-body { min-height: 0; padding: 0 8px; background: transparent !important; }
 .rv-root-row, .rv-word-row { border-bottom: 1px solid var(--background-modifier-border); min-height: 42px; background: transparent !important; }
 .rv-root-row:last-child, .rv-word-row:last-child { border-bottom: 0; }
-.rv-word-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: center; }
+.rv-word-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.rv-word-controls { display: flex; align-items: center; justify-content: flex-end; gap: 6px; min-width: max-content; }
 .rv-root-row.is-active { border-left: 2px solid var(--interactive-accent); }
 .rv-root-row:hover, .rv-word-row:hover { background: var(--background-modifier-hover) !important; }
 .rv-root-select, .rv-word-main { display: block; min-width: 0; flex: 1; width: 100%; color: var(--text-normal); text-align: left; padding: 9px 3px; border: 0 !important; border-radius: 0 !important; background: transparent !important; background-color: transparent !important; box-shadow: none !important; appearance: none; overflow-wrap: anywhere; white-space: normal; line-height: 1.35; }
-.rv-word-main { display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 2px 0; text-align: left; }
+.rv-word-main { display: block; text-align: left; overflow: visible; white-space: normal !important; word-break: break-word; }
+.rv-word-main .rv-meaning { display: inline; min-width: 0; white-space: normal !important; overflow-wrap: anywhere; word-break: break-word; }
 .rv-root-select strong, .rv-word-main strong { margin-right: 8px; color: var(--text-accent); font-weight: var(--font-semibold); }
 .rv-root-select:hover, .rv-word-main:hover { color: var(--text-normal); background: transparent !important; box-shadow: none !important; }
 .rv-root-select:hover strong, .rv-word-main:hover strong { color: var(--interactive-accent); }
@@ -65,8 +67,7 @@
 .rv-candidate-source { padding-top: 6px; }
 .rv-modal .setting-item-description { overflow-wrap: anywhere; }
 .rv-candidate .rv-actions { margin: 5px 0 0; }
-@container (max-width: 330px) {
-  .rv-word-row { grid-template-columns: 1fr auto auto auto; }
-  .rv-word-main { grid-column: 1 / -1; }
-  .rv-state { grid-column: 1; justify-self: start; }
+@container (max-width: 560px) {
+  .rv-word-row { grid-template-columns: minmax(0, 1fr); }
+  .rv-word-controls { justify-content: flex-end; }
 }

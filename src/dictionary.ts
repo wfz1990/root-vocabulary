@@ -40,7 +40,8 @@ export function parseEcdictCsv(text: string): EcdictRow[] {
 }
 
 function splitMeanings(value: string): string[] {
-  return value.split(/[\n;]/).map(item => item.replace(/^\s*(?:\d+\.|[-*])\s*/, '').trim()).filter(Boolean);
+  const normalized = value.replace(/\\(?:r)?n/g, '\n');
+  return normalized.split(/[\n;]/).map(item => item.replace(/^\s*(?:\d+\.|[-*])\s*/, '').trim()).filter(Boolean);
 }
 
 export function findEcdictMeanings(rows: EcdictRow[], spelling: string): ChineseMeaningCandidate[] {

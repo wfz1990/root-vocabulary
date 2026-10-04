@@ -12,6 +12,10 @@ function iconButton(parent: HTMLElement, icon: string, label: string, action: ()
   return button;
 }
 
+function displayMeaning(value: string): string {
+  return value.replace(/\\(?:r)?n/g, ' ').replace(/[\r\n]+/g, ' ');
+}
+
 export class VocabularyView extends ItemView {
   private unsubscribe?: () => void;
   private query = '';
@@ -236,21 +240,22 @@ export class VocabularyView extends ItemView {
       const main = row.createEl('button', { cls: 'rv-word-main' });
       main.createEl('strong', { text: word.spelling });
       if (word.ipa) main.createEl('span', { text: word.ipa, cls: 'rv-muted' });
-      main.createSpan({ text: word.meaning, cls: 'rv-meaning' });
+      main.createSpan({ text: displayMeaning(word.meaning), cls: 'rv-meaning' });
       main.addEventListener('click', () => { void this.store.open(word); });
-      const state = row.createEl('select', { cls: 'rv-state', attr: { 'aria-label': `${word.spelling} 熟悉度` } });
+      const controls = row.createDiv({ cls: 'rv-word-controls' });
+      const state = controls.createEl('select', { cls: 'rv-state', attr: { 'aria-label': `${word.spelling} 熟悉度` } });
       for (const option of ['未学', '学习中', '已掌握'] as Familiarity[]) state.createEl('option', { text: option, value: option });
       state.value = word.familiarity;
       state.addEventListener('change', () => {
         void this.store.updateWordState(word, { familiarity: state.value as Familiarity })
           .catch(error => { state.value = word.familiarity; new Notice((error as Error).message); });
       });
-      const star = iconButton(row, 'star', word.favorite ? '取消收藏' : '收藏单词', () => {
+      const star = iconButton(controls, 'star', word.favorite ? '取消收藏' : '收藏单词', () => {
         void this.store.updateWordState(word, { favorite: !word.favorite })
           .catch(error => new Notice((error as Error).message));
       });
       if (word.favorite) star.addClass('is-favorite');
-      iconButton(row, 'pencil', '编辑单词', () => this.edit(word));
+      iconButton(controls, 'pencil', '编辑单词', () => this.edit(word));
     }
     if (!roots.length) wordList.createDiv({ text: '还没有词根。点击上方加号开始。', cls: 'rv-empty' });
     else if (!matched.length) wordList.createDiv({ text: words.length ? '没有符合条件的单词。' : '还没有单词。点击上方新建单词按钮添加。', cls: 'rv-empty' });

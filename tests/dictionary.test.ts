@@ -3,6 +3,7 @@ import test from 'node:test';
 import { findEcdictMeanings, parseEcdictCsv } from '../src/dictionary.ts';
 
 const csv = `word,translation,definition,phonetic\n"ascribe","把…归因于;归咎于","attribute","əˈskraɪb"\n"respect","尊重;敬意","esteem","rɪˈspekt"\n"multi","第一行;第二行","",""\n`;
+const escapedNewlineCsv = `word,translation,definition,phonetic\n"escaped","第一行\\n第二行","",""\n`;
 
 test('parses quoted ECDICT CSV fields', () => {
   const rows = parseEcdictCsv(csv);
@@ -20,4 +21,8 @@ test('finds multiple Chinese meanings and matches spelling case-insensitively', 
 
 test('supports multiple meanings separated by newlines', () => {
   assert.deepEqual(findEcdictMeanings(parseEcdictCsv(csv), 'multi').map(candidate => candidate.meaning), ['第一行', '第二行']);
+});
+
+test('normalizes escaped newlines from ECDICT translations', () => {
+  assert.deepEqual(findEcdictMeanings(parseEcdictCsv(escapedNewlineCsv), 'escaped').map(candidate => candidate.meaning), ['第一行', '第二行']);
 });
