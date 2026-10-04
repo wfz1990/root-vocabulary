@@ -326,7 +326,7 @@ export class VocabularyView extends ItemView {
       this.wordSort = wordSort.value as typeof this.wordSort;
       this.renderResults();
     });
-    const wordCollapse = iconButton(wordHeader, this.wordsCollapsed ? 'chevron-down' : 'chevron-up',
+    const wordCollapse = iconButton(wordActions, this.wordsCollapsed ? 'chevron-down' : 'chevron-up',
       this.wordsCollapsed ? '展开所有单词' : '折叠所有单词', () => {
         this.wordsCollapsed = !this.wordsCollapsed;
         this.expandedWordGroups.clear();

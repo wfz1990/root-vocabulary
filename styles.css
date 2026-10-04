@@ -34,7 +34,8 @@
 .rv-word-controls { display: flex; align-items: center; justify-content: flex-end; gap: 6px; min-width: 0; max-width: 150px; flex-wrap: wrap; padding: 0 3px; }
 .rv-root-row.is-active { border-left: 2px solid var(--interactive-accent); }
 .rv-root-row:hover, .rv-word-row:hover { background: var(--background-modifier-hover) !important; }
-.rv-root-select, .rv-word-main { display: block; min-width: 0; flex: 1; width: 100%; color: var(--text-normal); text-align: left; padding: 9px 3px; border: 0 !important; border-radius: 0 !important; background: transparent !important; background-color: transparent !important; box-shadow: none !important; appearance: none; overflow-wrap: anywhere; white-space: normal; line-height: 1.35; }
+.rv-root-select, .rv-word-main { display: block; min-width: 0; flex: 1; width: 100%; color: var(--text-normal); font-size: var(--font-ui-small); text-align: left; padding: 9px 3px; border: 0 !important; border-radius: 0 !important; background: transparent !important; background-color: transparent !important; box-shadow: none !important; appearance: none; overflow-wrap: anywhere; white-space: normal; line-height: 1.35; }
+.rv-root-select .rv-muted { font-size: inherit; line-height: inherit; }
 .rv-word-main { display: block; height: auto !important; min-height: 0; text-align: left; overflow: visible; white-space: normal !important; word-break: break-word; cursor: pointer; }
 .rv-word-main .rv-meaning { display: inline; min-width: 0; white-space: normal !important; overflow-wrap: anywhere; word-break: break-word; }
 .rv-root-select strong, .rv-word-main strong { margin-right: 8px; color: var(--text-accent); font-weight: var(--font-semibold); }
