@@ -237,11 +237,15 @@ export class VocabularyView extends ItemView {
         wordGroupBody.toggleClass('rv-hidden', !wordGroupOpen);
       }
       const row = wordGroupBody!.createDiv({ cls: 'rv-word-row' });
-      const main = row.createEl('button', { cls: 'rv-word-main' });
+      const main = row.createDiv({ cls: 'rv-word-main', attr: { role: 'button', tabindex: '0', 'aria-label': `打开单词笔记：${word.spelling}` } });
       main.createEl('strong', { text: word.spelling });
       if (word.ipa) main.createEl('span', { text: word.ipa, cls: 'rv-muted' });
       main.createSpan({ text: displayMeaning(word.meaning), cls: 'rv-meaning' });
-      main.addEventListener('click', () => { void this.store.open(word); });
+      const openWord = () => { void this.store.open(word); };
+      main.addEventListener('click', openWord);
+      main.addEventListener('keydown', event => {
+        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openWord(); }
+      });
       const controls = row.createDiv({ cls: 'rv-word-controls' });
       const state = controls.createEl('select', { cls: 'rv-state', attr: { 'aria-label': `${word.spelling} 熟悉度` } });
       for (const option of ['未学', '学习中', '已掌握'] as Familiarity[]) state.createEl('option', { text: option, value: option });
