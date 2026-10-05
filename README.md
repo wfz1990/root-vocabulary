@@ -1,10 +1,10 @@
-# 词根词库
+# root-vocabulary
 
 个人英语词根和单词记录插件，适用于 Obsidian 桌面端。数据保存在库内 `词根词库/词根` 和 `词根词库/单词` 的 Markdown 笔记中，可直接修改 frontmatter 和正文。一个单词可以关联多个词根；收藏和熟悉度用于筛选，不安排复习日期。
 
 ## 构建与安装
 
-开发与测试使用 Node.js 24 或更新版本。运行 `npm install`、`npm test`、`npm run typecheck`、`npm run build`。在目标 Obsidian 库中建立 `.obsidian/plugins/root-vocabulary/`，复制 `manifest.json`、`main.js`、`styles.css` 到该目录，然后在 Obsidian 的社区插件设置中启用“词根词库”。更新后替换这三个文件，并在社区插件设置中关闭再启用插件，或重启 Obsidian；只替换文件不会立即更新运行中的代码。
+开发与测试使用 Node.js 24 或更新版本。运行 `npm install`、`npm test`、`npm run typecheck`、`npm run build`。在目标 Obsidian 库中建立 `.obsidian/plugins/root-vocabulary/`，复制 `manifest.json`、`main.js`、`styles.css` 到该目录，然后在 Obsidian 的社区插件设置中启用 `root-vocabulary`。更新后替换这三个文件，并在社区插件设置中关闭再启用插件，或重启 Obsidian；只替换文件不会立即更新运行中的代码。
 
 点击左侧书本图标或执行“打开词根词库”命令。界面分为“词根”和“单词”两个页面，可用顶部标签切换；先新建词根，再新建单词。点击笔记行打开 Markdown，铅笔图标编辑字段。单词页可按拼写、中文释义、词根形式和变体搜索，并按熟悉度或收藏筛选。
 
