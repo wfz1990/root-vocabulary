@@ -3,11 +3,11 @@ import test from 'node:test';
 import { indexNotes, parseNote, resetWordFilter, searchWords, visibleWords, writeNote, type RootEntry, type WordEntry } from '../src/model.ts';
 
 const root: RootEntry = { kind: 'root', id: 'root-1', path: '词根词库/词根/spect.md', form: 'spect',
-  meaning: '看', variants: ['spec'], origin: '', explanation: '' };
+  meaning: '看', variants: ['spec'], origin: '', explanation: '', links: ['https://example.com/spect', 'https://example.com/spec'] };
 const otherRoot: RootEntry = { ...root, id: 'root-2', path: '词根词库/词根/re.md', form: 're', meaning: '再次', variants: [] };
 const word: WordEntry = { kind: 'word', id: 'word-1', path: '词根词库/单词/respect.md', spelling: 'respect',
   meaning: '尊重', rootIds: ['root-1', 'root-2'], ipa: '/rɪˈspekt/',
-  example: 'Respect others.', favorite: true, familiarity: '学习中', dictionarySource: '', dictionaryLicense: '' };
+  memoryAid: 're + spect = 再看', example: 'Respect others.', favorite: true, familiarity: '学习中', dictionarySource: '', dictionaryLicense: '' };
 const source = (entry: RootEntry | WordEntry) => ({ path: entry.path, text: writeNote(null, entry) });
 
 test('round trips root and multi-root word through Markdown frontmatter', () => {

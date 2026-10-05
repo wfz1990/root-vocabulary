@@ -14,6 +14,6 @@
 
 ## 笔记字段
 
-词根：`type: root`、`id`、`form`、`meaning` 为必需字段；`variants` 为文本列表，`origin`、`explanation` 可选。单词：`type: word`、`id`、`spelling`、`meaning`、`rootIds` 为必需字段；`ipa`、`example`、`favorite`、`familiarity`、`dictionarySource`、`dictionaryLicense` 可选。旧笔记中的 `phonics` 和 `partOfSpeech` 会作为未知字段保留，但插件不再读取、创建或编辑它们。`rootIds` 引用词根笔记的稳定 ID，笔记文件名可以改变。未知 frontmatter 字段与正文会在表单保存时保留。
+词根：`type: root`、`id`、`form`、`meaning` 为必需字段；`variants` 为文本列表，`origin`、`explanation` 可选，`links` 为链接列表（表单中每行一个链接）。单词：`type: word`、`id`、`spelling`、`meaning`、`rootIds` 为必需字段；`ipa`、`memoryAid`、`example`、`favorite`、`familiarity`、`dictionarySource`、`dictionaryLicense` 可选。`memoryAid` 用于记录辅助记忆内容，并显示在单词列表中。旧笔记中的 `phonics` 和 `partOfSpeech` 会作为未知字段保留，但插件不再读取、创建或编辑它们。`rootIds` 引用词根笔记的稳定 ID，笔记文件名可以改变。未知 frontmatter 字段与正文会在表单保存时保留。
 
 格式错误、重复 ID/拼写或无效关联显示在侧栏的“笔记问题”中，插件不会自动修改这些笔记。删除笔记请使用 Obsidian 文件管理器；删除词根前请先调整其关联单词。

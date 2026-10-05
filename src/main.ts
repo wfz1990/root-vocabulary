@@ -12,10 +12,10 @@ export default class RootVocabularyPlugin extends Plugin {
     this.ecdictPath = (await this.loadData() as { ecdictPath?: string } | null)?.ecdictPath || this.ecdictPath;
     this.store = new VocabularyStore(this.app, this.ecdictPath);
     this.addSettingTab(new RootVocabularySettingTab(this.app, this));
-    this.registerView(VIEW_TYPE, leaf => new VocabularyView(leaf, this.store, (entry, kind) => this.edit(entry, kind)));
+    this.registerView(VIEW_TYPE, leaf => new VocabularyView(leaf, this.store, (entry, kind, rootId) => this.edit(entry, kind, rootId)));
     this.addRibbonIcon('book-open', '打开词根词库', () => { void this.activateView(); });
     this.addCommand({ id: 'open-vocabulary', name: '打开词根词库', callback: () => { void this.activateView(); } });
-    this.addCommand({ id: 'new-root', name: '新建词根', callback: () => this.edit(undefined, 'root') });
+    this.addCommand({ id: 'new-root', name: '新建词根词缀', callback: () => this.edit(undefined, 'root') });
     this.addCommand({ id: 'new-word', name: '新建单词', callback: () => this.edit(undefined, 'word') });
     const affected = (file: TFile) => file.path.startsWith(`${ROOT_DIR}/`) || file.path.startsWith(`${WORD_DIR}/`);
     this.registerEvent(this.app.vault.on('create', file => { if (file instanceof TFile && affected(file)) this.scheduleRefresh(); }));
@@ -51,8 +51,8 @@ export default class RootVocabularyPlugin extends Plugin {
     this.app.workspace.revealLeaf(leaf);
   }
 
-  private edit(entry?: RootEntry | WordEntry, kind?: 'root' | 'word'): void {
-    new EntryModal(this.app, this.store, entry, entry?.kind ?? kind ?? 'root').open();
+  private edit(entry?: RootEntry | WordEntry, kind?: 'root' | 'word', rootId?: string): void {
+    new EntryModal(this.app, this.store, entry, entry?.kind ?? kind ?? 'root', rootId).open();
   }
 
   async saveSettings(): Promise<void> {

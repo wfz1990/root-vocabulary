@@ -47,8 +47,11 @@
 .rv-icon-button.is-favorite { color: var(--color-yellow); }
 .rv-root-detail { padding: 8px 0; border-top: 1px solid var(--background-modifier-border); }
 .rv-root-detail h4 { margin: 0 0 5px; }
+.rv-root-links { margin: 5px 0; overflow-wrap: anywhere; }
+.rv-root-links a { color: var(--text-accent); }
 .rv-word-heading { padding: 8px 0 3px; min-width: 0; overflow-wrap: anywhere; }
 .rv-meaning { display: inline; color: var(--text-muted); margin-left: 8px; overflow-wrap: anywhere; white-space: normal; line-height: 1.35; }
+.rv-memory-aid { display: inline; color: var(--color-purple); margin-left: 8px; overflow-wrap: anywhere; white-space: normal; line-height: 1.35; }
 .rv-empty { padding: 12px 0; color: var(--text-muted); }
 .rv-text-button { padding: 2px 6px; font-size: var(--font-ui-smaller); }
 .rv-text-button.is-active { color: var(--interactive-accent); }

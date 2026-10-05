@@ -7,12 +7,12 @@ export type EntryKind = 'root' | 'word';
 
 export interface RootEntry {
   kind: 'root'; id: string; path: string; form: string; meaning: string;
-  variants: string[]; origin: string; explanation: string;
+  variants: string[]; origin: string; explanation: string; links: string[];
 }
 export interface WordEntry {
   kind: 'word'; id: string; path: string; spelling: string; meaning: string;
   rootIds: string[]; ipa: string;
-  example: string; favorite: boolean; familiarity: Familiarity; dictionarySource: string; dictionaryLicense: string;
+  memoryAid: string; example: string; favorite: boolean; familiarity: Familiarity; dictionarySource: string; dictionaryLicense: string;
 }
 export type Entry = RootEntry | WordEntry;
 export interface Issue { path: string; message: string }
@@ -27,6 +27,13 @@ export function resetWordFilter(rootId = ''): WordFilter {
 const string = (v: unknown): string => typeof v === 'string' ? v.trim() : '';
 const strings = (v: unknown): string[] | null =>
   Array.isArray(v) && v.every(x => typeof x === 'string') ? v.map(x => x.trim()).filter(Boolean) : null;
+const optionalStrings = (data: Record<string, unknown>, key: string): string[] => {
+  if (data[key] == null) return [];
+  if (Array.isArray(data[key]) && data[key].every(x => typeof x === 'string'))
+    return (data[key] as string[]).map(x => x.trim()).filter(Boolean);
+  if (typeof data[key] === 'string') return String(data[key]).split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+  throw new Error(`${key} 必须是文本列表`);
+};
 const required = (data: Record<string, unknown>, key: string) => {
   const result = string(data[key]);
   if (!result) throw new Error(`${key} 必须是非空文本`);
@@ -53,7 +60,7 @@ export function parseNote(path: string, text: string): Entry {
     const variants = fields.variants == null ? [] : strings(fields.variants);
     if (!variants) throw new Error('variants 必须是文本列表');
     return { kind, id, path, form: required(fields, 'form'), meaning: required(fields, 'meaning'),
-      variants, origin: optional(fields, 'origin'), explanation: optional(fields, 'explanation') };
+      variants, origin: optional(fields, 'origin'), explanation: optional(fields, 'explanation'), links: optionalStrings(fields, 'links') };
   }
   const rootIds = strings(fields.rootIds);
   if (!rootIds?.length) throw new Error('rootIds 至少包含一个词根 ID');
@@ -62,7 +69,7 @@ export function parseNote(path: string, text: string): Entry {
   if (!['未学', '学习中', '已掌握'].includes(String(familiarity))) throw new Error('familiarity 无效');
   return { kind, id, path, spelling: required(fields, 'spelling'), meaning: required(fields, 'meaning'), rootIds,
     ipa: optional(fields, 'ipa'),
-    example: optional(fields, 'example'), favorite: fields.favorite ?? false, familiarity: familiarity as Familiarity,
+    memoryAid: optional(fields, 'memoryAid'), example: optional(fields, 'example'), favorite: fields.favorite ?? false, familiarity: familiarity as Familiarity,
     dictionarySource: optional(fields, 'dictionarySource'), dictionaryLicense: optional(fields, 'dictionaryLicense') };
 }
 
@@ -109,9 +116,9 @@ export function writeNote(original: string | null, entry: Entry): string {
   if (!(doc.contents instanceof YAMLMap)) throw new Error('frontmatter 必须是对象');
   const fields: Record<string, unknown> = entry.kind === 'root'
     ? { type: 'root', id: entry.id, form: entry.form, meaning: entry.meaning, variants: entry.variants,
-        origin: entry.origin, explanation: entry.explanation }
+        origin: entry.origin, explanation: entry.explanation, links: entry.links }
     : { type: 'word', id: entry.id, spelling: entry.spelling, meaning: entry.meaning, rootIds: entry.rootIds,
-        ipa: entry.ipa, example: entry.example,
+        ipa: entry.ipa, memoryAid: entry.memoryAid, example: entry.example,
         favorite: entry.favorite, familiarity: entry.familiarity, dictionarySource: entry.dictionarySource,
         dictionaryLicense: entry.dictionaryLicense };
   for (const [key, value] of Object.entries(fields)) doc.set(key, value);
