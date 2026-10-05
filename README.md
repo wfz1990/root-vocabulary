@@ -1,5 +1,17 @@
 # root-vocabulary
 
+An Obsidian desktop plugin for organizing English roots, affixes, and related vocabulary. It stores every entry as a Markdown note, supports multiple root associations, searches spelling and Chinese meanings, tracks familiarity and favorites, and looks up Chinese definitions from a local ECDICT CSV file.
+
+## Installation and usage
+
+Install the plugin from the Obsidian Community Plugins directory. To install a release manually, copy `main.js`, `manifest.json`, and `styles.css` into `.obsidian/plugins/root-vocabulary/`, then enable `root-vocabulary` in Obsidian.
+
+Open the plugin from the ribbon book icon or the `打开词根词库` command. Create a root or affix before creating related words. Plugin data is stored in `词根词库/词根` and `词根词库/单词`; the Markdown files and their frontmatter remain directly editable.
+
+Chinese meaning lookup uses the local [ECDICT](https://github.com/skywind3000/ECDICT) dataset and does not send words to an online translation service. Download `ecdict.csv`, place it at `词根词库/ecdict.csv`, or configure another vault-relative path in the plugin settings.
+
+## 中文说明
+
 个人英语词根和单词记录插件，适用于 Obsidian 桌面端。数据保存在库内 `词根词库/词根` 和 `词根词库/单词` 的 Markdown 笔记中，可直接修改 frontmatter 和正文。一个单词可以关联多个词根；收藏和熟悉度用于筛选，不安排复习日期。
 
 ## 构建与安装

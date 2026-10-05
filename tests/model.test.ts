@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { indexNotes, parseNote, resetWordFilter, searchWords, visibleWords, writeNote, type RootEntry, type WordEntry } from '../src/model.ts';
+import { indexNotes, parseNote, resetWordFilter, safeName, searchWords, visibleWords, writeNote, type RootEntry, type WordEntry } from '../src/model.ts';
 
 const root: RootEntry = { kind: 'root', id: 'root-1', path: '词根词库/词根/spect.md', form: 'spect',
   meaning: '看', variants: ['spec'], origin: '', explanation: '', links: ['https://example.com/spect', 'https://example.com/spec'] };
@@ -70,4 +70,8 @@ test('all words and root navigation clear hidden search, status and favorite fil
 
 test('invalid YAML cannot be overwritten by form writer', () => {
   assert.throws(() => writeNote('---\nid: [broken\n---\nbody', word));
+});
+
+test('safe filenames replace every reserved character', () => {
+  assert.equal(safeName('a[b]c^d#e/f\\g:h*i?j"k<l>m|n'), 'a-b-c-d-e-f-g-h-i-j-k-l-m-n');
 });

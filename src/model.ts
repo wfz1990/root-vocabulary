@@ -28,10 +28,11 @@ const string = (v: unknown): string => typeof v === 'string' ? v.trim() : '';
 const strings = (v: unknown): string[] | null =>
   Array.isArray(v) && v.every(x => typeof x === 'string') ? v.map(x => x.trim()).filter(Boolean) : null;
 const optionalStrings = (data: Record<string, unknown>, key: string): string[] => {
-  if (data[key] == null) return [];
-  if (Array.isArray(data[key]) && data[key].every(x => typeof x === 'string'))
-    return (data[key] as string[]).map(x => x.trim()).filter(Boolean);
-  if (typeof data[key] === 'string') return String(data[key]).split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+  const value = data[key];
+  if (value == null) return [];
+  if (Array.isArray(value) && value.every((item): item is string => typeof item === 'string'))
+    return value.map(item => item.trim()).filter(Boolean);
+  if (typeof value === 'string') return value.split(/\r?\n/).map(item => item.trim()).filter(Boolean);
   throw new Error(`${key} 必须是文本列表`);
 };
 const required = (data: Record<string, unknown>, key: string) => {
@@ -51,7 +52,7 @@ export function parseNote(path: string, text: string): Entry {
   if (!match) throw new Error('缺少完整的 YAML frontmatter');
   const doc = YAML.parseDocument(match[1], { uniqueKeys: true });
   if (doc.errors.length) throw new Error(`YAML 错误：${doc.errors[0].message}`);
-  const data = doc.toJS();
+  const data: unknown = doc.toJS();
   if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('frontmatter 必须是对象');
   const fields = data as Record<string, unknown>;
   if (fields.type !== kind) throw new Error(`type 应为 ${kind}`);
@@ -122,9 +123,10 @@ export function writeNote(original: string | null, entry: Entry): string {
         favorite: entry.favorite, familiarity: entry.familiarity, dictionarySource: entry.dictionarySource,
         dictionaryLicense: entry.dictionaryLicense };
   for (const [key, value] of Object.entries(fields)) doc.set(key, value);
-  return `---\n${doc.toString().trimEnd()}\n---\n${match ? original!.slice(match[0].length) : '\n'}`;
+  const body = match && original ? original.slice(match[0].length) : '\n';
+  return `---\n${doc.toString().trimEnd()}\n---\n${body}`;
 }
 
 export function safeName(name: string): string {
-  return name.trim().replace(/[\\/:*?"<>|#\[\]^]/g, '-').replace(/\s+/g, ' ').slice(0, 80) || '未命名';
+  return name.trim().replace(/[\\/:*?"<>|#[\]^]/g, '-').replace(/\s+/g, ' ').slice(0, 80) || '未命名';
 }

@@ -1,4 +1,4 @@
-import { App, Notice, TFile, TFolder } from 'obsidian';
+import { App, Notice, TAbstractFile, TFile, TFolder } from 'obsidian';
 import { Catalog, Entry, ROOT_DIR, RootEntry, WORD_DIR, WordEntry, indexNotes, parseNote, safeName, writeNote } from './model';
 import { ChineseMeaningCandidate, findEcdictMeanings, parseEcdictCsv } from './dictionary';
 
@@ -18,12 +18,26 @@ export class VocabularyStore {
 
   async refresh(): Promise<void> {
     const generation = ++this.generation;
-    const files = this.app.vault.getMarkdownFiles().filter(f =>
-      f.path.startsWith(`${ROOT_DIR}/`) || f.path.startsWith(`${WORD_DIR}/`));
+    const files = [ROOT_DIR, WORD_DIR].flatMap(path => this.getMarkdownFiles(path));
     const sources = await Promise.all(files.map(async f => ({ path: f.path, text: await this.app.vault.read(f) })));
     if (generation !== this.generation) return;
     this.catalog = indexNotes(sources);
     for (const listener of this.listeners) listener();
+  }
+
+  private getMarkdownFiles(path: string): TFile[] {
+    const root = this.app.vault.getAbstractFileByPath(path);
+    if (!(root instanceof TFolder)) return [];
+    const files: TFile[] = [];
+    const visit = (item: TAbstractFile): void => {
+      if (item instanceof TFile) {
+        if (item.extension === 'md') files.push(item);
+      } else if (item instanceof TFolder) {
+        for (const child of item.children) visit(child);
+      }
+    };
+    visit(root);
+    return files;
   }
 
   private async ensureFolder(path: string): Promise<void> {

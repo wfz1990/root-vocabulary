@@ -1,4 +1,4 @@
-import { Notice, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
+import { Notice, Plugin, PluginSettingTab, TFile, type SettingDefinitionItem } from 'obsidian';
 import { RootEntry, WordEntry, ROOT_DIR, WORD_DIR } from './model';
 import { VocabularyStore } from './store';
 import { EntryModal, VIEW_TYPE, VocabularyView } from './ui';
@@ -30,7 +30,6 @@ export default class RootVocabularyPlugin extends Plugin {
 
   onunload(): void {
     if (this.refreshTimer) window.clearTimeout(this.refreshTimer);
-    this.app.workspace.detachLeavesOfType(VIEW_TYPE);
   }
 
   private scheduleRefresh(): void {
@@ -48,7 +47,7 @@ export default class RootVocabularyPlugin extends Plugin {
       if (!leaf) return;
       await leaf.setViewState({ type: VIEW_TYPE, active: true });
     }
-    this.app.workspace.revealLeaf(leaf);
+    await this.app.workspace.revealLeaf(leaf);
   }
 
   private edit(entry?: RootEntry | WordEntry, kind?: 'root' | 'word', rootId?: string): void {
@@ -66,13 +65,32 @@ export default class RootVocabularyPlugin extends Plugin {
 class RootVocabularySettingTab extends PluginSettingTab {
   constructor(app: import('obsidian').App, private plugin: RootVocabularyPlugin) { super(app, plugin); }
 
-  display(): void {
-    const { containerEl } = this;
-    containerEl.empty();
-    containerEl.createEl('h2', { text: '词根词库：ECDICT 本地词典' });
-    containerEl.createEl('p', { text: '查询使用 vault 内的 ECDICT 本地词典。请下载 ecdict.csv，放入 vault 后填写路径。' });
-    new Setting(containerEl).setName('ECDICT CSV 路径').setDesc('相对于 vault 根目录，例如：词根词库/ecdict.csv')
-      .addText(text => text.setPlaceholder('词根词库/ecdict.csv').setValue(this.plugin.getEcdictPath())
-        .onChange(async value => { this.plugin.setEcdictPath(value.trim() || '词根词库/ecdict.csv'); await this.plugin.saveSettings(); }));
+  getSettingDefinitions(): SettingDefinitionItem[] {
+    return [{
+      type: 'group',
+      heading: 'ECDICT 本地词典',
+      items: [{
+        name: 'ECDICT CSV 路径',
+        desc: '查询使用 vault 内的 ECDICT 本地词典。请下载 ecdict.csv 并填写相对于 vault 根目录的路径。',
+        aliases: ['词典路径', '中文释义'],
+        control: {
+          type: 'text',
+          key: 'ecdictPath',
+          defaultValue: '词根词库/ecdict.csv',
+          placeholder: '词根词库/ecdict.csv',
+        },
+      }],
+    }];
+  }
+
+  getControlValue(key: string): unknown {
+    return key === 'ecdictPath' ? this.plugin.getEcdictPath() : undefined;
+  }
+
+  async setControlValue(key: string, value: unknown): Promise<void> {
+    if (key !== 'ecdictPath') return;
+    const path = typeof value === 'string' ? value.trim() : '';
+    this.plugin.setEcdictPath(path || '词根词库/ecdict.csv');
+    await this.plugin.saveSettings();
   }
 }

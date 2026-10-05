@@ -295,9 +295,9 @@ export class VocabularyView extends ItemView {
       const row = groupBody!.createDiv({ cls: `rv-root-row${this.rootId === root.id ? ' is-active' : ''}` });
       const select = row.createEl('button', { cls: 'rv-root-select' });
       select.createEl('strong', { text: root.form });
-      select.createEl('span', { text: root.meaning, cls: 'rv-muted' });
+      select.createSpan({ text: root.meaning, cls: 'rv-muted' });
       select.addEventListener('click', () => this.showScope(root.id));
-      row.createEl('span', { text: String(count.length), cls: 'rv-count' });
+      row.createSpan({ text: String(count.length), cls: 'rv-count' });
       iconButton(row, 'file-text', '打开词根笔记', () => { void this.store.open(root); });
       iconButton(row, 'file-plus', '在此词根词缀下新增单词', () => this.edit(undefined, 'word', root.id));
       iconButton(row, 'pencil', '编辑词根词缀', () => this.edit(root));
@@ -370,7 +370,7 @@ export class VocabularyView extends ItemView {
       const row = wordGroupBody!.createDiv({ cls: 'rv-word-row' });
       const main = row.createDiv({ cls: 'rv-word-main', attr: { role: 'button', tabindex: '0', 'aria-label': `打开单词笔记：${word.spelling}` } });
       main.createEl('strong', { text: word.spelling });
-      if (word.ipa) main.createEl('span', { text: word.ipa, cls: 'rv-muted' });
+      if (word.ipa) main.createSpan({ text: word.ipa, cls: 'rv-muted' });
       main.createSpan({ text: displayMeaning(word.meaning), cls: 'rv-meaning' });
       if (word.memoryAid) main.createSpan({ text: `辅助记忆：${displayMeaning(word.memoryAid)}`, cls: 'rv-memory-aid' });
       const openWord = () => { void this.store.open(word); };

@@ -9,7 +9,7 @@
 .rv-mode-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--background-modifier-border); }
 .rv-mode-tab { flex: 1; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; box-shadow: none; color: var(--text-muted); }
 .rv-mode-tab.is-active { border-bottom-color: var(--interactive-accent); color: var(--text-normal); }
-.rv-pane-hidden { display: none !important; }
+.rv-view .rv-pane-hidden { display: none; }
 .rv-filters select { min-width: 100px; flex: 1; }
 .rv-favorite-filter { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
 .rv-results { flex: 1 1 auto; overflow-y: auto; min-height: 0; padding-bottom: 12px; }
@@ -21,25 +21,25 @@
 .rv-root-actions, .rv-word-actions { display: flex; align-items: center; gap: 6px; }
 .rv-root-sort { width: auto; max-width: 88px; padding: 2px 22px 2px 7px; font-size: var(--font-ui-smaller); }
 .rv-word-sort { width: auto; max-width: 88px; padding: 2px 22px 2px 7px; font-size: var(--font-ui-smaller); }
-.rv-root-group, .rv-word-group { margin-bottom: 8px; border: 1px solid var(--background-modifier-border); border-radius: 8px; overflow: hidden; background: transparent !important; }
-.rv-root-group-label, .rv-word-group-label { display: block; width: 100%; position: sticky; top: 0; z-index: 1; padding: 6px 9px; border: 0; border-left: 3px solid var(--interactive-accent); border-bottom: 1px solid var(--background-modifier-border); border-radius: 0; background: var(--background-modifier-hover) !important; background-color: var(--background-modifier-hover) !important; box-shadow: none; color: var(--text-accent); font-size: var(--font-ui-smaller); font-weight: var(--font-semibold); letter-spacing: .04em; text-align: left; cursor: pointer; }
-.rv-root-group-label:hover, .rv-word-group-label:hover { background: var(--background-modifier-hover) !important; color: var(--interactive-accent); box-shadow: none; }
-.rv-root-group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); column-gap: 10px; padding: 0 8px; background: transparent !important; }
+.rv-view .rv-root-group, .rv-view .rv-word-group { margin-bottom: 8px; border: 1px solid var(--background-modifier-border); border-radius: 8px; overflow: hidden; background: transparent; }
+.rv-view .rv-root-group-label, .rv-view .rv-word-group-label { display: block; width: 100%; position: sticky; top: 0; z-index: 1; padding: 6px 9px; border: 0; border-left: 3px solid var(--interactive-accent); border-bottom: 1px solid var(--background-modifier-border); border-radius: 0; background: var(--background-modifier-hover); box-shadow: none; color: var(--text-accent); font-size: var(--font-ui-smaller); font-weight: var(--font-semibold); letter-spacing: .04em; text-align: left; cursor: pointer; }
+.rv-view .rv-root-group-label:hover, .rv-view .rv-word-group-label:hover { background: var(--background-modifier-hover); color: var(--interactive-accent); box-shadow: none; }
+.rv-root-group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 0 10px; padding: 0 8px; background: transparent; }
 .rv-word-section { border-top: 1px solid var(--background-modifier-border); }
 .rv-word-header { min-height: 38px; }
-.rv-word-group-body { min-height: 0; padding: 0 8px; background: transparent !important; }
-.rv-root-row, .rv-word-row { border-bottom: 1px solid var(--background-modifier-border); min-height: 0; background: transparent !important; }
+.rv-word-group-body { min-height: 0; padding: 0 8px; background: transparent; }
+.rv-view .rv-root-row, .rv-view .rv-word-row { border-bottom: 1px solid var(--background-modifier-border); min-height: 0; background: transparent; }
 .rv-root-row:last-child, .rv-word-row:last-child { border-bottom: 0; }
 .rv-word-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
 .rv-word-controls { display: flex; align-items: center; justify-content: flex-end; gap: 6px; min-width: 0; max-width: 150px; flex-wrap: wrap; padding: 0 3px; }
 .rv-root-row.is-active { border-left: 2px solid var(--interactive-accent); }
-.rv-root-row:hover, .rv-word-row:hover { background: var(--background-modifier-hover) !important; }
-.rv-root-select, .rv-word-main { display: block; min-width: 0; flex: 1; width: 100%; color: var(--text-normal); font-size: var(--font-ui-small); text-align: left; padding: 9px 3px; border: 0 !important; border-radius: 0 !important; background: transparent !important; background-color: transparent !important; box-shadow: none !important; appearance: none; overflow-wrap: anywhere; white-space: normal; line-height: 1.35; }
+.rv-view .rv-root-row:hover, .rv-view .rv-word-row:hover { background: var(--background-modifier-hover); }
+.rv-view button.rv-root-select, .rv-view .rv-word-main { display: block; min-width: 0; flex: 1; width: 100%; color: var(--text-normal); font-size: var(--font-ui-small); text-align: left; padding: 9px 3px; border: 0; border-radius: 0; background: transparent; box-shadow: none; appearance: none; overflow-wrap: anywhere; white-space: normal; line-height: 1.35; }
 .rv-root-select .rv-muted { font-size: inherit; line-height: inherit; }
-.rv-word-main { display: block; height: auto !important; min-height: 0; text-align: left; overflow: visible; white-space: normal !important; word-break: break-word; cursor: pointer; }
-.rv-word-main .rv-meaning { display: inline; min-width: 0; white-space: normal !important; overflow-wrap: anywhere; word-break: break-word; }
+.rv-word-main { display: block; height: auto; min-height: 0; text-align: left; overflow: visible; white-space: normal; word-break: break-word; cursor: pointer; }
+.rv-word-main .rv-meaning { display: inline; min-width: 0; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
 .rv-root-select strong, .rv-word-main strong { margin-right: 8px; color: var(--text-accent); font-weight: var(--font-semibold); }
-.rv-root-select:hover, .rv-word-main:hover { color: var(--text-normal); background: transparent !important; box-shadow: none !important; }
+.rv-view button.rv-root-select:hover, .rv-view .rv-word-main:hover { color: var(--text-normal); background: transparent; box-shadow: none; }
 .rv-root-select:hover strong, .rv-word-main:hover strong { color: var(--interactive-accent); }
 .rv-muted { color: var(--text-muted); font-size: var(--font-ui-smaller); }
 .rv-count, .rv-state { color: var(--text-muted); white-space: nowrap; font-size: var(--font-ui-smaller); }
@@ -58,7 +58,7 @@
 .rv-modal .modal-content { max-height: 72vh; overflow-y: auto; }
 .rv-modal .setting-item { align-items: flex-start; }
 .rv-modal .setting-item-control input[type=text], .rv-modal .setting-item-control textarea { width: min(250px, 55vw); }
-.rv-modal .setting-item-control textarea { min-height: 48px !important; height: 48px !important; max-height: 48px !important; resize: none; overflow-y: auto; }
+.modal-container .rv-modal .setting-item-control textarea { min-height: 48px; height: 48px; max-height: 48px; resize: none; overflow-y: auto; }
 .rv-root-choices { max-height: 180px; overflow: auto; border: 1px solid var(--background-modifier-border); padding: 8px; margin: 12px 0; }
 .rv-root-choices .setting-item { padding: 5px 0; }
 .rv-root-search { width: 100%; margin: 8px 0 3px; }
