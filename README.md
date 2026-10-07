@@ -22,7 +22,7 @@ Chinese meaning lookup uses the local [ECDICT](https://github.com/skywind3000/EC
 
 点击左侧书本图标打开“打开词根词库”命令。界面分为“词根”和“单词”两个页面，可用顶部标签切换；先新建词根，再新建单词，铅笔图标可重新编辑字段。词根和单词页可按拼写、中文释义、词根形式和变体搜索，并按熟悉度或收藏筛选。单击词根会自动跳转到关联的单词。
 
-![](.\image\img01.png)
+![](./image/img01.png)
 
 ## 重点说明
 
