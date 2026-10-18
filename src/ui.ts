@@ -6,7 +6,7 @@ import { VocabularyStore } from './store';
 export const VIEW_TYPE = 'root-vocabulary-view';
 
 function iconButton(parent: HTMLElement, icon: string, label: string, action: () => void): HTMLButtonElement {
-  const button = parent.createEl('button', { cls: 'rv-icon-button', attr: { 'aria-label': label, title: label } });
+  const button = parent.createEl('button', { cls: 'rv-icon-button', attr: { 'aria-label': label } });
   setIcon(button, icon);
   button.addEventListener('click', action);
   return button;
@@ -38,6 +38,8 @@ export class VocabularyView extends ItemView {
   private pronunciationCache = new Map<string, string | null>();
   private pronunciationRequests = new Map<string, Promise<string | null>>();
   private activeAudio?: HTMLAudioElement;
+  private activePronunciationButton?: HTMLButtonElement;
+  private activePronunciationSpelling = '';
   private pronunciationSequence = 0;
   private results!: HTMLElement;
   private searchInput!: HTMLInputElement;
@@ -94,6 +96,26 @@ export class VocabularyView extends ItemView {
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     this.activeAudio?.pause();
     this.activeAudio = undefined;
+    this.contentEl.querySelectorAll<HTMLButtonElement>('.rv-audio-playing').forEach(button => this.setPronunciationButtonState(button, false));
+    this.activePronunciationButton = undefined;
+    this.activePronunciationSpelling = '';
+  }
+
+  private setPronunciationButtonState(button: HTMLButtonElement, playing: boolean, spelling = ''): void {
+    button.toggleClass('rv-audio-playing', playing);
+    button.setAttribute('aria-pressed', String(playing));
+    if (spelling) button.setAttribute('aria-label', playing ? `正在播放${spelling}发音` : `播放${spelling}发音`);
+  }
+
+  private finishPronunciation(button: HTMLButtonElement, spelling: string): void {
+    if (this.activePronunciationButton === button || this.activePronunciationSpelling === spelling) {
+      this.contentEl.querySelectorAll<HTMLButtonElement>('.rv-audio-playing').forEach(current => {
+        this.setPronunciationButtonState(current, false, spelling);
+      });
+      this.setPronunciationButtonState(button, false, spelling);
+      this.activePronunciationButton = undefined;
+      this.activePronunciationSpelling = '';
+    }
   }
 
   private findYoudaoAudio(spelling: string): string | null {
@@ -135,7 +157,7 @@ export class VocabularyView extends ItemView {
     return audio;
   }
 
-  private async playRemoteAudio(url: string): Promise<boolean> {
+  private async playRemoteAudio(url: string, onEnded: () => void): Promise<boolean> {
     const audio = new Audio();
     audio.preload = 'auto';
     this.activeAudio = audio;
@@ -163,20 +185,23 @@ export class VocabularyView extends ItemView {
       return false;
     }
     try {
+      audio.addEventListener('ended', onEnded, { once: true });
       await audio.play();
       audio.addEventListener('ended', () => {
         if (this.activeAudio === audio) this.activeAudio = undefined;
       }, { once: true });
       return true;
     } catch {
+      audio.removeEventListener('ended', onEnded);
       if (this.activeAudio === audio) this.activeAudio = undefined;
       return false;
     }
   }
 
-  private speakSystemWord(spelling: string): void {
+  private speakSystemWord(spelling: string, onFinished: () => void): void {
     if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
       new Notice('当前环境不支持单词发音');
+      onFinished();
       return;
     }
     window.speechSynthesis.cancel();
@@ -184,19 +209,28 @@ export class VocabularyView extends ItemView {
     utterance.lang = 'en-US';
     utterance.rate = 0.85;
     utterance.pitch = 1;
+    utterance.onend = onFinished;
+    utterance.onerror = onFinished;
     window.speechSynthesis.speak(utterance);
   }
 
-  private async playWord(spelling: string): Promise<void> {
+  private async playWord(spelling: string, button: HTMLButtonElement): Promise<void> {
     const sequence = ++this.pronunciationSequence;
     this.stopPronunciation();
+    this.activePronunciationButton = button;
+    this.activePronunciationSpelling = spelling;
+    this.setPronunciationButtonState(button, true, spelling);
+    const finish = () => {
+      if (sequence === this.pronunciationSequence) this.finishPronunciation(button, spelling);
+    };
     const youdaoAudio = this.findYoudaoAudio(spelling);
-    if (youdaoAudio && await this.playRemoteAudio(youdaoAudio)) return;
+    if (youdaoAudio && await this.playRemoteAudio(youdaoAudio, finish)) return;
     if (sequence !== this.pronunciationSequence) return;
     const freeDictionaryAudio = await this.findFreeDictionaryAudio(spelling);
     if (sequence !== this.pronunciationSequence) return;
-    if (freeDictionaryAudio && await this.playRemoteAudio(freeDictionaryAudio)) return;
-    if (sequence === this.pronunciationSequence) this.speakSystemWord(spelling);
+    if (freeDictionaryAudio && await this.playRemoteAudio(freeDictionaryAudio, finish)) return;
+    if (sequence === this.pronunciationSequence) this.speakSystemWord(spelling, finish);
+    else finish();
   }
 
   private showScope(rootId: string): void {
@@ -249,7 +283,7 @@ export class VocabularyView extends ItemView {
     rootElements.push(rootHeader);
     rootHeader.createEl('h4', { text: `词根词缀 ${roots.length}` });
     const rootActions = rootHeader.createDiv({ cls: 'rv-root-actions' });
-    const sort = rootActions.createEl('select', { cls: 'rv-root-sort', attr: { 'aria-label': '词根词缀排序', title: '词根词缀排序' } });
+    const sort = rootActions.createEl('select', { cls: 'rv-root-sort', attr: { 'aria-label': '词根词缀排序' } });
     sort.createEl('option', { text: 'A-Z', value: 'form-asc' });
     sort.createEl('option', { text: 'Z-A', value: 'form-desc' });
     sort.createEl('option', { text: '按释义', value: 'meaning' });
@@ -328,11 +362,13 @@ export class VocabularyView extends ItemView {
     const wordSection = this.results.createDiv({ cls: 'rv-word-section' });
     wordSection.toggleClass('rv-pane-hidden', this.viewMode !== 'words');
     const wordHeader = wordSection.createDiv({ cls: 'rv-section-heading rv-word-header' });
-    wordHeader.createEl('h4', { text: `${selected ? `${selected.form} · ` : ''}单词 ${matched.length}`, cls: 'rv-word-heading' });
+    const wordTitle = wordHeader.createDiv({ cls: 'rv-word-title' });
+    wordTitle.createEl('h4', { text: `${selected ? `${selected.form} · ` : ''}单词 ${matched.length}`, cls: 'rv-word-heading' });
+    if (selected) iconButton(wordTitle, 'pencil', '编辑当前词根词缀', () => this.edit(selected));
     const wordActions = wordHeader.createDiv({ cls: 'rv-word-actions' });
     const all = wordActions.createEl('button', { text: '全部单词', cls: this.rootId ? 'rv-text-button' : 'rv-text-button is-active' });
     all.addEventListener('click', () => { this.viewMode = 'words'; this.showScope(''); });
-    const wordSort = wordActions.createEl('select', { cls: 'rv-word-sort', attr: { 'aria-label': '单词排序', title: '单词排序' } });
+    const wordSort = wordActions.createEl('select', { cls: 'rv-word-sort', attr: { 'aria-label': '单词排序' } });
     wordSort.createEl('option', { text: 'A-Z', value: 'spelling-asc' });
     wordSort.createEl('option', { text: 'Z-A', value: 'spelling-desc' });
     wordSort.value = this.wordSort;
@@ -386,7 +422,9 @@ export class VocabularyView extends ItemView {
         void this.store.updateWordState(word, { familiarity: state.value as Familiarity })
           .catch(error => { state.value = word.familiarity; new Notice((error as Error).message); });
       });
-      iconButton(controls, 'volume-2', `播放${word.spelling}发音`, () => { void this.playWord(word.spelling); });
+      const pronunciation = iconButton(controls, 'volume-2', `播放${word.spelling}发音`, () => { void this.playWord(word.spelling, pronunciation); });
+      pronunciation.toggleClass('rv-audio-playing', this.activePronunciationSpelling === word.spelling);
+      pronunciation.setAttribute('aria-pressed', String(this.activePronunciationSpelling === word.spelling));
       const star = iconButton(controls, 'star', word.favorite ? '取消收藏' : '收藏单词', () => {
         void this.store.updateWordState(word, { favorite: !word.favorite })
           .catch(error => new Notice((error as Error).message));
@@ -415,8 +453,7 @@ export class EntryModal extends Modal {
     super(app);
     this.draft = entry ? structuredClone(entry) : kind === 'root'
       ? { kind: 'root', id: crypto.randomUUID(), path: '', form: '', meaning: '', variants: [], origin: '', explanation: '', links: [] }
-      : { kind: 'word', id: crypto.randomUUID(), path: '', spelling: '', meaning: '', rootIds: initialRootId ? [initialRootId] : [], ipa: '',
-          memoryAid: '', example: '', favorite: false, familiarity: '未学', dictionarySource: '', dictionaryLicense: '' };
+      : this.createWordDraft(initialRootId ? [initialRootId] : []);
   }
 
   async onOpen(): Promise<void> {
@@ -427,19 +464,42 @@ export class EntryModal extends Modal {
       catch (error) { new Notice((error as Error).message); this.close(); return; }
     }
     const body = this.contentEl;
-    if (this.draft.kind === 'root') this.renderRoot(body, this.draft);
-    else this.renderWord(body, this.draft);
-    new Setting(body).addButton(button => button.setButtonText('保存').setCta().onClick(async () => {
+    const form = body.createDiv({ cls: 'rv-entry-form' });
+    if (this.draft.kind === 'root') this.renderRoot(form, this.draft);
+    else this.renderWord(form, this.draft);
+    const actions = new Setting(body);
+    if (this.draft.kind === 'word' && !this.draft.path) {
+      actions.addButton(button => button.setButtonText('继续新建').onClick(async () => {
+        try {
+          const rootIds = this.draft.kind === 'word' ? [...this.draft.rootIds] : [];
+          await this.saveDraft();
+          this.draft = this.createWordDraft(rootIds);
+          this.candidates = [];
+          form.empty();
+          this.renderWord(form, this.draft);
+        } catch (error) { new Notice((error as Error).message, 7000); }
+      }));
+    }
+    actions.addButton(button => button.setButtonText('保存').setCta().onClick(async () => {
       try {
-        if (this.draft.kind === 'root') {
-          if (!this.draft.form.trim() || !this.draft.meaning.trim()) throw new Error('请填写词根/词缀形式和中文含义');
-        } else if (!this.draft.spelling.trim() || !this.draft.meaning.trim() || !this.draft.rootIds.length) {
-          throw new Error('请填写拼写、中文释义并选择至少一个词根');
-        }
-        await this.store.save(this.draft, this.expected);
+        await this.saveDraft();
         this.close();
       } catch (error) { new Notice((error as Error).message, 7000); }
     }));
+  }
+
+  private createWordDraft(rootIds: string[] = []): WordEntry {
+    return { kind: 'word', id: crypto.randomUUID(), path: '', spelling: '', meaning: '', rootIds, ipa: '',
+      memoryAid: '', example: '', favorite: false, familiarity: '未学', dictionarySource: '', dictionaryLicense: '' };
+  }
+
+  private async saveDraft(): Promise<void> {
+    if (this.draft.kind === 'root') {
+      if (!this.draft.form.trim() || !this.draft.meaning.trim()) throw new Error('请填写词根/词缀形式和中文含义');
+    } else if (!this.draft.spelling.trim() || !this.draft.meaning.trim() || !this.draft.rootIds.length) {
+      throw new Error('请填写拼写、中文释义并选择至少一个词根');
+    }
+    await this.store.save(this.draft, this.expected);
   }
 
   private renderRoot(body: HTMLElement, root: RootEntry): void {
